@@ -26,3 +26,6 @@ serverKey=YOURSERVERKEYHERE
 6. `pm2 start index.js`
 
 Using PM2 makes sure that the script keeps running in the background even if you close the terminal or disconnect from the server. Thank you for using this automation!
+
+## Further Notes
+If you want to disable some commands, just rename the file names from commands/utility and add the prefix .txt (or you can just delete the file).
