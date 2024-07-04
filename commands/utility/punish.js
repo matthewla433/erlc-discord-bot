@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const fetch = require('node-fetch');
 
