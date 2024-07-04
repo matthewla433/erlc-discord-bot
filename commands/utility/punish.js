@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('punish')
-		.setDescription('Punish a Roblox user in NCSRP.')
+		.setDescription('Punish a Roblox user in the private server.')
 		.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 		.addSubcommand(subcommand =>
 			subcommand
