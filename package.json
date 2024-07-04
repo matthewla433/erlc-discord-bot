@@ -1,7 +1,7 @@
 {
-  "name": "ncsrp-bot",
+  "name": "erlc-discord-bot",
   "version": "1.0.0",
-  "description": "The official bot for North Carolina State Roleplay.",
+  "description": "This ER:LC Discord Bot lets you punish members in game (by giving a warning, kick, or ban). Also features /ban and /kick commands for members in your Discord server.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
