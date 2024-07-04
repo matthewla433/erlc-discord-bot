@@ -1,5 +1,3 @@
-const serverKey = "exampleServerKey"; // CHANGE THIS TO YOUR SERVER KEY
-
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const fetch = require('node-fetch');
 
@@ -107,7 +105,7 @@ async function sendPunishmentCommand(command) {
 		const response = await fetch('https://api.policeroleplay.community/v1/server/command', {
 			method: 'post',
 			body: JSON.stringify({ "command": command }),
-			headers: { 'Server-Key': serverKey },
+			headers: { 'Server-Key': process.env.serverKey },
 		});
 
 		if (response.status !== 200) {
