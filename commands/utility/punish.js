@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const fetch = require('node-fetch');
@@ -55,8 +55,17 @@ module.exports = {
 			ban: 'banned'
 		};
 
+		await interaction.reply("Loading...");
+
 		try {
 			const robloxId = await getRobloxIdFromUsername(username);
+			
+			// Check rate limit before sending the command
+			const rateLimitInfo = await checkRateLimit();
+			if (rateLimitInfo.remaining <= 0) {
+				const waitTime = rateLimitInfo.reset - Math.floor(Date.now() / 1000);
+				return interaction.editReply(`Rate limit exceeded. Please wait ${waitTime} seconds before trying again.`);
+			}
 
 			let command;
 			if (subcommand === 'warn') {
@@ -68,9 +77,9 @@ module.exports = {
 			}
 			
 			await sendPunishmentCommand(command);
-			await interaction.reply(`**${username}** has been ${pastTenseMap[subcommand]} successfully for: ${reason}`);
+			await interaction.editReply(`**${username}** has been ${pastTenseMap[subcommand]} successfully for: ${reason}`);
 		} catch (error) {
-			await interaction.reply(`Error: ${error.message}`);
+			await interaction.editReply(`Error: ${error.message}`);
 		}
 	},
 };
@@ -98,6 +107,31 @@ async function getRobloxIdFromUsername(username) {
 		return data.data[0].id;
 	} catch (error) {
 		console.error('Error fetching Roblox ID:', error);
+		throw error;
+	}
+}
+
+async function checkRateLimit() {
+	try {
+		const response = await fetch('https://api.policeroleplay.community/v1/server/command', {
+			method: 'post',
+			body: JSON.stringify({ "command": ":cmds" }),
+			headers: { 'Server-Key': process.env.serverKey },
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to check rate limit.');
+		}
+
+		const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining'));
+		const rateLimitReset = parseInt(response.headers.get('X-RateLimit-Reset'));
+
+		return {
+			remaining: rateLimitRemaining,
+			reset: rateLimitReset
+		};
+	} catch (error) {
+		console.error('Error checking rate limit:', error);
 		throw error;
 	}
 }
