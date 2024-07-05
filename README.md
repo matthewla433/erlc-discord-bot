@@ -1,7 +1,7 @@
 # ER:LC Discord Bot
 
 ## What is this?
-This Discord bot has a /punish command where you can punish people in your private server by warning them, kicking them, or banning them. Open an issue if you have a command suggestion.
+This Discord bot has a /punish command (as well as other Discord related commands) where you can punish people in your ER:LC private server by warning them (which sends them a PM), kicking them, or banning them. Open an issue if you have a command suggestion or if there are any issues.
 
 ## Why is this useful?
 For private servers that want to have a custom bot instead of using a public version.
