@@ -45,7 +45,7 @@ module.exports = {
 						.setDescription('Reason for banning.')
 						.setRequired(true))),
 	async execute(interaction) {
-		let subcommand = interaction.options.getSubcommand();
+		const subcommand = interaction.options.getSubcommand();
 		const username = interaction.options.getString('username');
 		const reason = interaction.options.getString('reason');
 
@@ -59,13 +59,6 @@ module.exports = {
 
 		try {
 			const robloxId = await getRobloxIdFromUsername(username);
-			
-			// Check rate limit before sending the command
-			const rateLimitInfo = await checkRateLimit();
-			if (rateLimitInfo.remaining <= 0) {
-				const waitTime = rateLimitInfo.reset - Math.floor(Date.now() / 1000);
-				return interaction.editReply(`Rate limit exceeded. Please wait ${waitTime} seconds before trying again.`);
-			}
 
 			let command;
 			if (subcommand === 'warn') {
@@ -75,7 +68,7 @@ module.exports = {
 			} else if (subcommand === 'ban') {
 				command = `:ban ${robloxId}`;
 			}
-			
+
 			await sendPunishmentCommand(command);
 			await interaction.editReply(`**${username}** has been ${pastTenseMap[subcommand]} successfully for: ${reason}`);
 		} catch (error) {
@@ -111,41 +104,38 @@ async function getRobloxIdFromUsername(username) {
 	}
 }
 
-async function checkRateLimit() {
-	try {
-		const response = await fetch('https://api.policeroleplay.community/v1/server/command', {
-			method: 'post',
-			body: JSON.stringify({ "command": ":cmds" }),
-			headers: { 'Server-Key': process.env.serverKey },
-		});
-
-		if (!response.ok) {
-			throw new Error('Failed to check rate limit.');
-		}
-
-		const rateLimitRemaining = parseInt(response.headers.get('X-RateLimit-Remaining'));
-		const rateLimitReset = parseInt(response.headers.get('X-RateLimit-Reset'));
-
-		return {
-			remaining: rateLimitRemaining,
-			reset: rateLimitReset
-		};
-	} catch (error) {
-		console.error('Error checking rate limit:', error);
-		throw error;
-	}
-}
-
 async function sendPunishmentCommand(command) {
 	try {
 		const response = await fetch('https://api.policeroleplay.community/v1/server/command', {
 			method: 'post',
 			body: JSON.stringify({ "command": command }),
-			headers: { 'Server-Key': process.env.serverKey },
+			headers: { 
+				'Server-Key': process.env.serverKey,
+				'Content-Type': 'application/json'
+			},
 		});
 
-		if (response.status !== 200) {
-			throw new Error('Failed to execute punishment command.');
+		if (response.status === 429) {
+			// Handle rate limit error
+			const retryAfter = parseInt(response.headers.get('Retry-After'), 10) * 1000;
+			console.log(`Rate limit exceeded. Waiting for ${retryAfter} ms before retrying.`);
+			await new Promise(resolve => setTimeout(resolve, retryAfter));
+			// Retry the command
+			const retryResponse = await fetch('https://api.policeroleplay.community/v1/server/command', {
+				method: 'post',
+				body: JSON.stringify({ "command": command }),
+				headers: { 
+					'Server-Key': process.env.serverKey,
+					'Content-Type': 'application/json'
+				},
+			});
+			if (!retryResponse.ok) {
+				const errorBody = await retryResponse.json();
+				throw new Error(`Failed to execute punishment command after retry: ${errorBody.message}`);
+			}
+		} else if (!response.ok) {
+			const errorBody = await response.json();
+			throw new Error(`Failed to execute punishment command: ${errorBody.message}`);
 		}
 	} catch (error) {
 		console.error('Error sending punishment command:', error);
