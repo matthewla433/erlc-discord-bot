@@ -115,12 +115,14 @@ async function sendPunishmentCommand(command) {
 			},
 		});
 
-		if (response.status === 429) {
-			// Handle rate limit error
+		if (response.status === 422) {
+			await interaction.editReply("Private server is shut down (there are no players), unable to complete punishment.");
+		}
+		if (response.status === 400) {
 			const retryAfter = parseInt(response.headers.get('Retry-After'), 10) * 1000;
 			console.log(`Rate limit exceeded. Waiting for ${retryAfter} ms before retrying.`);
 			await new Promise(resolve => setTimeout(resolve, retryAfter));
-			// Retry the command
+
 			const retryResponse = await fetch('https://api.policeroleplay.community/v1/server/command', {
 				method: 'post',
 				body: JSON.stringify({ "command": command }),
